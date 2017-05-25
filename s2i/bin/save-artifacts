@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+pushd ${HOME} >/dev/null
+
+tar cf - .rvm
+
+popd >/dev/null
+

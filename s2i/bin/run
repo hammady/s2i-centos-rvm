@@ -1,0 +1,16 @@
+#!/bin/bash
+
+export RACK_ENV=${RACK_ENV:-"production"}
+
+if [ "$PROCTYPE" == "" ]; then
+  echo "No PROCTYPE environment variable found, please set to Procfile process to run"
+  exit 1
+fi
+
+if [ ! -f Procfile ]; then
+  echo "No Procfile found"
+  exit 1
+fi
+
+which foreman &>/dev/null || gem install foreman
+foreman start $PROCTYPE=1

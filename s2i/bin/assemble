@@ -1,0 +1,107 @@
+#!/bin/bash
+
+function rvm_use() {
+  source $HOME/.rvm/scripts/rvm
+  rvm --install use $1 --default
+}
+
+function detect_ruby_version() {
+  if [ "$RUBY_VERSION" != "" ]; then
+    echo "Using ruby from RUBY_VERSION environment variable"
+    rvm_use $RUBY_VERSION
+  elif [ -f Gemfile ]; then
+    echo "Using ruby from Gemfile"
+    line=`grep -e '^ruby ' Gemfile`
+    if [ $? -eq 0 ]; then
+      ruby_version=`echo $line | sed "s/ruby *'\(.*\)'/\1/"`
+      echo "Found ruby version: $ruby_version"
+      rvm_use $ruby_version
+    fi
+  else
+    echo "No RUBY_VERSION environment variable or Gemfile found, using rvm default ruby"
+    rvm_use default
+  fi
+}
+
+function rake_assets_precompile() {
+  [[ "$DISABLE_ASSET_COMPILATION" == "true" ]] && return
+  [ ! -f Gemfile ] && return
+  [ ! -f Rakefile ] && return
+  ! grep " rails " Gemfile.lock >/dev/null && return
+  ! grep " execjs " Gemfile.lock >/dev/null && return
+  ! bundle exec 'rake -T' | grep "assets:precompile" >/dev/null && return
+
+  echo "---> Starting asset compilation ..."
+  bundle exec rake assets:precompile
+}
+
+# exit immediately on error
+set -e
+
+# set environment
+export RACK_ENV=${RACK_ENV:-"production"}
+
+# restore build artifacts
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  mv /tmp/artifacts/* $HOME/.
+fi
+
+# rubygem mirror
+if [ -n "$RUBYGEM_MIRROR" ]; then
+  bundle config mirror.https://rubygems.org $RUBYGEM_MIRROR
+fi
+
+# copy source
+shopt -s dotglob
+echo "---> Installing application source ..."
+mv /tmp/src/* ./
+
+detect_ruby_version
+
+# build source
+echo "---> Building your Ruby application from source ..."
+if [ -f Gemfile ]; then
+  ADDTL_BUNDLE_ARGS=""
+  if [ -f Gemfile.lock ]; then
+    ADDTL_BUNDLE_ARGS="--deployment"
+  fi
+
+  if [[ "$RAILS_ENV" == "development" || "$RACK_ENV" == "development" ]]; then
+    BUNDLE_WITHOUT=${BUNDLE_WITHOUT:-"test"}
+  elif [[ "$RAILS_ENV" == "test" || "$RACK_ENV" == "test" ]]; then
+    BUNDLE_WITHOUT=${BUNDLE_WITHOUT:-"development"}
+  else
+    BUNDLE_WITHOUT=${BUNDLE_WITHOUT:-"development:test"}
+  fi
+  
+  if [ -n "$BUNDLE_WITHOUT" ]; then
+    ADDTL_BUNDLE_ARGS+=" --without $BUNDLE_WITHOUT"
+  fi
+  
+  echo "---> Running 'bundle install ${ADDTL_BUNDLE_ARGS}' ..."
+  bundle install ${ADDTL_BUNDLE_ARGS}
+
+  echo "---> Cleaning up unused ruby gems ..."
+  bundle clean -V
+fi
+
+if ! bundle exec rackup -h &>/dev/null; then
+  echo "WARNING: Rubygem Rack is not installed in the present image."
+  echo "         Add rack to your Gemfile in order to start the web server."
+fi
+
+if [[ "$RAILS_ENV" == "production" || "$RACK_ENV" == "production" ]]; then
+  rake_assets_precompile
+fi
+
+# Fix source directory permissions
+fix-permissions ./
+
+# Make the ./tmp folder world writeable as Rails or other frameworks might use
+# it to store temporary data (uploads/cache/sessions/etcd).
+# The ./db folder has to be writeable as well because when Rails complete the
+# migration it writes the schema version into ./db/schema.db
+set +e
+[[ -d ./tmp ]] && chgrp -R 0 ./tmp && chmod -R g+rw ./tmp
+[[ -d ./db ]] && chgrp -R 0 ./db && chmod -R g+rw ./db
+set -e

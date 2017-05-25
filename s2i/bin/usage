@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# inform the user how to use the image
+cat <<EOF
+This is a CentOS S2I image with RVM preinstalled ready to run on OpenShift
+For more information about RVM: https://rvm.io
+
+To install a specific ruby version, set environment variable RUBY_VERSION
+or specify it in your Gemfile. Otherwise the rvm default ruby will be installed.
+
+To run commands in your docker, create a Procfile and set PROCTYPE
+environment variable to the command name
+For more information about Procfile: https://ddollar.github.io/foreman/#PROCFILE
+The web command will launch on port 8080
+EOF
