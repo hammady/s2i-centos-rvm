@@ -1,27 +1,6 @@
 #!/bin/bash
 
-function rvm_use() {
-  source $HOME/.rvm/scripts/rvm
-  rvm --install use $1 --default
-}
-
-function detect_ruby_version() {
-  if [ "$RUBY_VERSION" != "" ]; then
-    echo "Using ruby from RUBY_VERSION environment variable"
-    rvm_use $RUBY_VERSION
-  elif [ -f Gemfile ]; then
-    echo "Using ruby from Gemfile"
-    line=`grep -e '^ruby ' Gemfile`
-    if [ $? -eq 0 ]; then
-      ruby_version=`echo $line | sed "s/ruby *'\(.*\)'/\1/"`
-      echo "Found ruby version: $ruby_version"
-      rvm_use $ruby_version
-    fi
-  else
-    echo "No RUBY_VERSION environment variable or Gemfile found, using rvm default ruby"
-    rvm_use default
-  fi
-}
+source $STI_SCRIPTS_PATH/common
 
 function rake_assets_precompile() {
   [[ "$DISABLE_ASSET_COMPILATION" == "true" ]] && return
@@ -35,26 +14,24 @@ function rake_assets_precompile() {
   bundle exec rake assets:precompile
 }
 
+function copy_source() {
+  shopt -s dotglob
+  echo "---> Installing application source ..."
+  mv /tmp/src/* ./
+  shopt -u dotglob
+}
+
+$STI_SCRIPTS_PATH/restore-artifacts
+
 # exit immediately on error
 set -e
-
-# set environment
-export RACK_ENV=${RACK_ENV:-"production"}
-
-# restore build artifacts
-if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
-  mv /tmp/artifacts/* $HOME/.
-fi
 
 # rubygem mirror
 if [ -n "$RUBYGEM_MIRROR" ]; then
   bundle config mirror.https://rubygems.org $RUBYGEM_MIRROR
 fi
 
-# copy source
-shopt -s dotglob
-echo "---> Installing application source ..."
-mv /tmp/src/* ./
+copy_source
 
 detect_ruby_version
 
@@ -78,8 +55,8 @@ if [ -f Gemfile ]; then
     ADDTL_BUNDLE_ARGS+=" --without $BUNDLE_WITHOUT"
   fi
   
-  echo "---> Running 'bundle install ${ADDTL_BUNDLE_ARGS}' ..."
-  bundle install ${ADDTL_BUNDLE_ARGS}
+  echo "---> Running 'bundle install --path ./bundle ${ADDTL_BUNDLE_ARGS}' ..."
+  bundle install --path ./bundle ${ADDTL_BUNDLE_ARGS}
 
   echo "---> Cleaning up unused ruby gems ..."
   bundle clean -V

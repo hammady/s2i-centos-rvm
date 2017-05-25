@@ -1,0 +1,28 @@
+#!/bin/bash
+
+export RACK_ENV=${RACK_ENV:-"production"}
+export RAILS_ENV=${RAILS_ENV:-"production"}
+
+function rvm_use() {
+  source $HOME/.rvm/scripts/rvm
+  rvm --install use $1 --default
+}
+
+function detect_ruby_version() {
+  if [ "$RUBY_VERSION" != "" ]; then
+    echo "Using ruby from RUBY_VERSION environment variable: $RUBY_VERSION"
+    rvm_use $RUBY_VERSION
+  elif [ -f Gemfile ]; then
+    echo "Looking for ruby in Gemfile"
+    line=`grep -e '^ruby ' Gemfile`
+    if [ $? -eq 0 ]; then
+      ruby_version=`echo $line | sed "s/ruby *'\(.*\)'/\1/"`
+      echo "Found ruby version in Gemfile: $ruby_version"
+      rvm_use $ruby_version
+    fi
+  else
+    echo "No RUBY_VERSION environment variable or Gemfile found, using rvm default ruby"
+    rvm_use default
+  fi
+}
+

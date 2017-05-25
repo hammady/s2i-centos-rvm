@@ -11,8 +11,7 @@ LABEL summary="Platform for building and running RVM-based Ruby applications" \
       io.openshift.tags="builder,ruby,rvm"
 
 RUN yum install -y centos-release-scl && \
-    yum-config-manager --enable centos-sclo-rh-testing && \
-    INSTALL_PKGS="libyaml-devel readline-devel libffi-devel libtool bison rh-nodejs4" && \
+    INSTALL_PKGS="libyaml-devel readline-devel libffi-devel libtool bison" && \
     yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && rpm -V $INSTALL_PKGS && \
     yum clean all -y
 
@@ -34,7 +33,8 @@ RUN echo progress-bar >> ~/.curlrc && \
     rvm autolibs read-fail && \
     rvm requirements && \
     echo "bundler" >> $HOME/.rvm/gemsets/global.gems && \
-    echo "foreman" >> $HOME/.rvm/gemsets/global.gems
+    echo "foreman" >> $HOME/.rvm/gemsets/global.gems && \
+    echo "listen" >> $HOME/.rvm/gemsets/global.gems
 
 # Set the default CMD to print the usage of the language image
 CMD $STI_SCRIPTS_PATH/usage

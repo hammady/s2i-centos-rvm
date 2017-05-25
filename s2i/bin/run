@@ -1,16 +1,23 @@
 #!/bin/bash
 
-export RACK_ENV=${RACK_ENV:-"production"}
+source $STI_SCRIPTS_PATH/common
 
-if [ "$PROCTYPE" == "" ]; then
-  echo "No PROCTYPE environment variable found, please set to Procfile process to run"
-  exit 1
-fi
+pushd ${HOME} >/dev/null
 
 if [ ! -f Procfile ]; then
   echo "No Procfile found"
   exit 1
 fi
 
-which foreman &>/dev/null || gem install foreman
-foreman start $PROCTYPE=1
+if [ "$PROCTYPE" == "" ]; then
+  echo "No PROCTYPE environment variable found, defaulting to web"
+  PROCTYPE=web
+fi
+
+detect_ruby_version
+
+echo "Now starting process defined by process type $PROCTYPE"
+export PORT=8080 # should match Dockerfile EXPOSE
+exec foreman start $PROCTYPE=1
+
+popd >/dev/null

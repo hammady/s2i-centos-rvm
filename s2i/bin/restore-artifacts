@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+if [ "$(ls -A /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring build artifacts ..."
+  for i in rubies gems environments wrappers; do
+    mv -v /tmp/artifacts/.rvm/$i ./.rvm/
+  done
+  mv -v /tmp/artifacts/bundle ./
+else
+  echo "---> No build artifacts to restore"
+fi
