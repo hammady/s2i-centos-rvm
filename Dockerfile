@@ -33,8 +33,7 @@ RUN echo progress-bar >> ~/.curlrc && \
     rvm autolibs read-fail && \
     rvm requirements && \
     echo "bundler" >> $HOME/.rvm/gemsets/global.gems && \
-    echo "foreman" >> $HOME/.rvm/gemsets/global.gems && \
-    echo "listen" >> $HOME/.rvm/gemsets/global.gems
+    echo "foreman" >> $HOME/.rvm/gemsets/global.gems
 
 # Set the default CMD to print the usage of the language image
 CMD $STI_SCRIPTS_PATH/usage
