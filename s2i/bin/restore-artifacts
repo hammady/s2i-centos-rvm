@@ -6,6 +6,7 @@ if [ "$(ls -A /tmp/artifacts/ 2>/dev/null)" ]; then
     mv -v /tmp/artifacts/.rvm/$i ./.rvm/
   done
   mv -v /tmp/artifacts/bundle ./
+  mv -v /tmp/artifacts/public/assets ./public_assets
 else
   echo "---> No build artifacts to restore"
 fi

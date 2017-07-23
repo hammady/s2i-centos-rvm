@@ -18,6 +18,9 @@ function copy_source() {
   shopt -s dotglob
   echo "---> Installing application source ..."
   mv /tmp/src/* ./
+  # public/assets were restored in public_assets temporarily
+  # otherwise, it would be overrided by the public folder coming from source
+  [ -d ./public_assets ] && mv -v ./public_assets public/assets
   shopt -u dotglob
 }
 

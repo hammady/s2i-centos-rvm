@@ -2,7 +2,13 @@
 
 pushd ${HOME} >/dev/null
 
-tar cf - .rvm/rubies .rvm/gems .rvm/environments .rvm/wrappers bundle/ruby
+tar cf - \
+  .rvm/rubies \
+  .rvm/gems \
+  .rvm/environments \
+  .rvm/wrappers \
+  bundle/ruby \
+  public/assets
 
 popd >/dev/null
 
