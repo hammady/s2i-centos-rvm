@@ -18,6 +18,11 @@ function copy_source() {
   shopt -s dotglob
   echo "---> Installing application source ..."
   mv /tmp/src/* ./
+
+  # .git is excluded from tar, don't cache gems coming from git
+  # https://github.com/openshift/source-to-image/issues/299
+  rm -Rf ./bundle/ruby/*/bundler ./bundle/ruby/*/cache/bundler  
+
   # public/assets were restored in public_assets temporarily
   # otherwise, it would be overrided by the public folder coming from source
   [ -d ./public_assets ] && mv -v ./public_assets public/assets
@@ -60,9 +65,6 @@ if [ -f Gemfile ]; then
   
   echo "---> Running 'bundle install --path ./bundle ${ADDTL_BUNDLE_ARGS}' ..."
   bundle install --path ./bundle ${ADDTL_BUNDLE_ARGS}
-
-  echo "---> Cleaning up unused ruby gems ..."
-  bundle clean -V
 fi
 
 if ! bundle exec rackup -h &>/dev/null; then

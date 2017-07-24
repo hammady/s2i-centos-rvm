@@ -7,7 +7,7 @@ tar cf - \
   .rvm/gems \
   .rvm/environments \
   .rvm/wrappers \
-  bundle/ruby \
+  bundle \
   public/assets
 
 popd >/dev/null
