@@ -35,5 +35,8 @@ RUN echo progress-bar >> ~/.curlrc && \
     echo "bundler" >> $HOME/.rvm/gemsets/global.gems && \
     echo "foreman" >> $HOME/.rvm/gemsets/global.gems
 
+COPY ./rvm-entrypoint.sh /usr/bin/rvm-entrypoint.sh
+ENTRYPOINT ["rvm-entrypoint.sh"]
+
 # Set the default CMD to print the usage of the language image
 CMD $STI_SCRIPTS_PATH/usage
