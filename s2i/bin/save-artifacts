@@ -2,6 +2,11 @@
 
 pushd ${HOME} >/dev/null
 
+# base image may not have assets precompiled
+# which will cause the tar command to fail
+# don't let that happen, be forgiving for missing assets
+[ -d public/assets ] || mkdir -p public/assets
+
 tar cf - \
   .rvm/rubies \
   .rvm/gems \
